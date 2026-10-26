@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¿Quién Gana Realmente? - Juego Educativo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0f172a',
+                            card: '#1e293b',
+                            accent: '#6366f1',
+                            accentHover: '#4f46e5',
+                            success: '#10b981',
+                            warning: '#f59e0b',
+                            danger: '#ef4444',
+                            gold: '#fbbf24'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        heading: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090d16;
+            color: #f8fafc;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+
+        .heading-font {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Glassmorphism effects */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-button {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .glass-button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateY(-2px);
+        }
+
+        .glass-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        /* Animated gradients */
+        .gradient-text {
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .pulse-slow {
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.02); }
+        }
+
+        /* Smooth scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Custom transitions */
+        .screen-fade {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Indicator Bars */
+        .bar-transition {
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- TOP NAVIGATION & HEADER -->
+    <header class="w-full bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md px-4 py-3">
+        <div class="max-w-5xl mx-auto flex items-center justify-between gap-2">
+            <!-- Game Title / Brand -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center text-indigo-400 font-extrabold text-xl shadow-lg shadow-indigo-500/10">
+                    ?
+                </div>
+                <div>
+                    <h1 class="heading-font font-bold text-lg md:text-xl tracking-wide leading-none text-white">
+                        ¿QUIÉN GANA <span class="gradient-text">REALMENTE?</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 font-medium hidden sm:block">Aprender a decidir en la era digital</p>
+                </div>
+            </div>
+
+            <!-- Audio Toggle & Refresh -->
+            <div class="flex items-center gap-2">
+                <button id="soundToggle" onclick="toggleAudio()" class="glass-button p-2.5 rounded-xl text-slate-300 hover:text-white flex items-center gap-2 text-sm font-semibold" title="Activar/Silenciar sonido">
+                    <i id="soundIcon" class="fas fa-volume-up text-indigo-400 text-base"></i>
+                    <span id="soundText" class="hidden sm:inline">Sonido</span>
+                </button>
+                <button onclick="resetGamePrompt()" class="glass-button p-2.5 rounded-xl text-slate-300 hover:text-white flex items-center gap-2 text-sm font-semibold" title="Reiniciar Juego">
+                    <i class="fas fa-redo-alt text-amber-400 text-base"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Tracker Bar -->
+        <div id="progressContainer" class="max-w-5xl mx-auto mt-3 hidden">
+            <div class="flex justify-between items-center text-xs font-semibold text-slate-400 mb-1 px-1">
+                <span id="progressStepLabel" class="text-indigo-400">Nivel 1 de 4</span>
+                <span id="progressPercent">25%</span>
+            </div>
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
+                <div id="progressBar" class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-full rounded-full transition-all duration-500" style="width: 25%"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN INTERACTIVE CONTAINER -->
+    <main class="max-w-5xl w-full mx-auto p-4 md:p-6 flex-grow flex flex-col justify-center items-center">
+        
+        <!-- SCREEN 0: WELCOME / LANDING -->
+        <section id="screenIntro" class="w-full max-w-2xl glass-panel p-6 md:p-10 rounded-3xl text-center shadow-2xl relative overflow-hidden border border-slate-700/60 screen-fade">
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-pink-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 mb-6">
+                <i class="fas fa-gamepad"></i> Experiencia Interactiva Educativa
+            </span>
+
+            <h2 class="heading-font font-black text-3xl md:text-5xl text-white mb-4 tracking-tight leading-tight">
+                ¿Azar, diversión o <br><span class="gradient-text">un negocio diseñado para ti?</span>
+            </h2>
+
+            <p class="text-slate-300 text-sm md:text-base mb-8 max-w-lg mx-auto leading-relaxed">
+                Recorre 4 experiencias dinámicas para analizar cómo funcionan las apuestas en línea, detectar la publicidad engañosa y tomar el control de tus decisiones financieras y emocionales.
+            </p>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 text-left">
+                <div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700/50">
+                    <div class="text-indigo-400 font-bold mb-1 text-xs md:text-sm"><i class="fas fa-dice text-indigo-400 mr-1"></i> Nivel 1</div>
+                    <div class="text-xs text-slate-300 font-medium">¿Azar o Negocio?</div>
+                </div>
+                <div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700/50">
+                    <div class="text-purple-400 font-bold mb-1 text-xs md:text-sm"><i class="fas fa-bullhorn text-purple-400 mr-1"></i> Nivel 2</div>
+                    <div class="text-xs text-slate-300 font-medium">Anuncios Trampa</div>
+                </div>
+                <div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700/50">
+                    <div class="text-emerald-400 font-bold mb-1 text-xs md:text-sm"><i class="fas fa-balance-scale text-emerald-400 mr-1"></i> Nivel 3</div>
+                    <div class="text-xs text-slate-300 font-medium">Decisiones</div>
+                </div>
+                <div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700/50">
+                    <div class="text-amber-400 font-bold mb-1 text-xs md:text-sm"><i class="fas fa-brain text-amber-400 mr-1"></i> Nivel 4</div>
+                    <div class="text-xs text-slate-300 font-medium">Evaluación</div>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-lg rounded-2xl shadow-xl shadow-indigo-600/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 mx-auto">
+                <span>COMENZAR EXPERIENCIA</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </section>
+
+        <!-- SCREEN 1: NIVEL 1 - RULETA (AZAR O NEGOCIO) -->
+        <section id="screenLevel1" class="w-full max-w-4xl glass-panel p-5 md:p-8 rounded-3xl shadow-2xl hidden screen-fade">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/50">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
+                        Nivel 1: 🎰 ¿Azar o Negocio?
+                    </span>
+                    <h2 class="heading-font font-bold text-2xl text-white mt-1">Simulador de Probabilidad</h2>
+                </div>
+                
+                <!-- Chips Counter Banner -->
+                <div class="flex items-center gap-3 bg-slate-900/90 border border-amber-500/30 px-4 py-2 rounded-2xl shadow-inner">
+                    <i class="fas fa-coins text-amber-400 text-2xl animate-bounce"></i>
+                    <div>
+                        <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Tus Fichas Ficticias</div>
+                        <div id="chipsDisplay" class="text-xl font-black text-amber-400 leading-tight">10</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Arena Grid -->
+            <div id="rouletteGameArea" class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                <!-- Roulette Canvas Column -->
+                <div class="md:col-span-7 flex flex-col items-center justify-center relative">
+                    <!-- Pointer Arrow -->
+                    <div class="absolute -top-3 z-20 text-amber-400 text-3xl filter drop-shadow-md">
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <!-- Canvas -->
+                    <div class="relative p-2 bg-slate-900/80 rounded-full border-4 border-slate-700 shadow-2xl">
+                        <canvas id="rouletteCanvas" width="300" height="300" class="max-w-full h-auto rounded-full"></canvas>
+                    </div>
+                    <!-- Round Indicator -->
+                    <div class="mt-3 text-xs font-semibold text-slate-400">
+                        Ronda: <span id="roundCounterText" class="text-indigo-400 font-bold">1</span> de 4
+                    </div>
+                </div>
+
+                <!-- Betting Controls Column -->
+                <div class="md:col-span-5 flex flex-col gap-4 bg-slate-900/50 p-5 rounded-2xl border border-slate-700/60">
+                    <h3 class="font-bold text-sm text-slate-200 uppercase tracking-wide">Configurar Apuesta</h3>
+                    
+                    <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl border border-slate-700">
+                        <span class="text-xs font-semibold text-slate-300">Fichas a Arriesgar:</span>
+                        <div class="flex items-center gap-3">
+                            <button onclick="adjustBet(-1)" id="btnBetMinus" class="w-9 h-9 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-bold flex items-center justify-center transition active:scale-95">-</button>
+                            <span id="betAmountDisplay" class="font-extrabold text-amber-400 text-xl w-6 text-center">2</span>
+                            <button onclick="adjustBet(1)" id="btnBetPlus" class="w-9 h-9 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-bold flex items-center justify-center transition active:scale-95">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Payout Odds Info -->
+                    <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/40 text-xs text-slate-400 space-y-1">
+                        <div class="flex justify-between"><span>Sectores Verdes (Multiplica x2):</span><span class="font-bold text-emerald-400">3 de 8</span></div>
+                        <div class="flex justify-between"><span>Sectores Rojos (Pierdes todo):</span><span class="font-bold text-rose-400">5 de 8</span></div>
+                        <div class="text-[11px] text-slate-500 italic mt-1">*La casa siempre mantiene ventaja matemática.</div>
+                    </div>
+
+                    <!-- Spin Button -->
+                    <button id="btnSpin" onclick="spinRoulette()" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-base rounded-xl shadow-lg shadow-emerald-600/20 transition hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fas fa-play text-xs"></i> GIRAR RULETA
+                    </button>
+
+                    <!-- Retire Button -->
+                    <button id="btnRetire" onclick="retireFromRoulette()" class="w-full py-2.5 glass-button text-slate-300 hover:text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2">
+                        <i class="fas fa-door-open"></i> RETIRARME AHORA
+                    </button>
+                </div>
+            </div>
+
+            <!-- Feedback Modal / Panel within Level 1 -->
+            <div id="rouletteFeedback" class="hidden mt-6 p-4 rounded-2xl bg-slate-800 border border-slate-700 text-center screen-fade">
+                <div id="rouletteResultBadge" class="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2"></div>
+                <h4 id="rouletteResultTitle" class="font-bold text-lg text-white mb-1"></h4>
+                <p id="rouletteResultDesc" class="text-slate-300 text-sm mb-4 max-w-lg mx-auto"></p>
+                <button id="btnRouletteNext" onclick="nextRouletteStep()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl transition">
+                    CONTINUAR
+                </button>
+            </div>
+
+            <!-- LEVEL 1 END SUMMARY CHART -->
+            <div id="rouletteSummaryArea" class="hidden mt-4 text-center screen-fade">
+                <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-700">
+                    <h3 class="heading-font font-bold text-xl text-white mb-2">Resultado Final del Nivel 1</h3>
+                    <p class="text-slate-300 text-sm mb-6 max-w-lg mx-auto">
+                        Comparación de tus fichas iniciales con las finales. ¿Crees que la ruleta es un método seguro de ingreso?
+                    </p>
+
+                    <!-- Simple Canvas Bar Chart -->
+                    <div class="max-w-md mx-auto h-48 bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 flex items-end justify-around gap-4 mb-6">
+                        <!-- Initial Chips Bar -->
+                        <div class="flex flex-col items-center flex-1 h-full justify-end">
+                            <span id="chartValStart" class="text-xs font-bold text-slate-300 mb-2">10 Fichas</span>
+                            <div class="w-full max-w-[60px] bg-slate-600 rounded-t-lg transition-all duration-700" style="height: 60%"></div>
+                            <span class="text-xs font-bold text-slate-400 mt-2">Iniciales</span>
+                        </div>
+                        <!-- Final Chips Bar -->
+                        <div class="flex flex-col items-center flex-1 h-full justify-end">
+                            <span id="chartValEnd" class="text-xs font-bold text-amber-400 mb-2">0 Fichas</span>
+                            <div id="chartBarEnd" class="w-full max-w-[60px] bg-amber-500 rounded-t-lg transition-all duration-700" style="height: 10%"></div>
+                            <span class="text-xs font-bold text-slate-400 mt-2">Finales</span>
+                        </div>
+                    </div>
+
+                    <!-- Lesson Callout -->
+                    <div class="bg-indigo-950/50 border border-indigo-800/60 p-4 rounded-xl text-left mb-6">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-lightbulb text-indigo-400 text-xl mt-0.5"></i>
+                            <div>
+                                <h4 class="font-bold text-indigo-300 text-sm">Enseñanza Clave:</h4>
+                                <p class="text-slate-300 text-xs md:text-sm mt-1 leading-relaxed">
+                                    Una ganancia ocasional es pura suerte estadística, no una garantía de ingresos futuros. Las plataformas de apuestas están programadas con una ventaja matemática constante para asegurar que la casa siempre gane a largo plazo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="goToLevel2()" class="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-base rounded-xl shadow-lg transition hover:scale-105">
+                        PASAR AL NIVEL 2 <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: NIVEL 2 - ANUNCIOS PUBLICITARIOS TRAMPA -->
+        <section id="screenLevel2" class="w-full max-w-3xl glass-panel p-5 md:p-8 rounded-3xl shadow-2xl hidden screen-fade">
+            <div class="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/50">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
+                        Nivel 2: 📱 Te quieren hacer clic
+                    </span>
+                    <h2 class="heading-font font-bold text-2xl text-white mt-1">Identifica la Estrategia Publicitaria</h2>
+                </div>
+                <div class="text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+                    Anuncio <span id="adIndexDisplay" class="text-purple-400">1</span> de 4
+                </div>
+            </div>
+
+            <!-- Smartphone Frame Simulation -->
+            <div class="max-w-md mx-auto bg-slate-900 p-4 rounded-3xl border-4 border-slate-700 shadow-2xl mb-6 relative">
+                <!-- Phone Top Bar -->
+                <div class="flex justify-between items-center text-[10px] text-slate-500 px-2 mb-3 border-b border-slate-800 pb-2">
+                    <span><i class="fas fa-wifi"></i> 5G</span>
+                    <span class="font-bold">RED SOCIAL FICTICIA</span>
+                    <span>100% <i class="fas fa-battery-full"></i></span>
+                </div>
+
+                <!-- Fake Ad Card -->
+                <div id="adCard" class="bg-gradient-to-br from-indigo-950 via-slate-900 to-purple-950 p-5 rounded-2xl border border-indigo-500/30 text-center relative overflow-hidden shadow-inner">
+                    <span class="absolute top-3 right-3 text-[10px] bg-slate-800/80 text-slate-400 px-2 py-0.5 rounded border border-slate-700">Publicidad</span>
+                    
+                    <div id="adIcon" class="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 text-indigo-400 flex items-center justify-center text-2xl mx-auto mb-3">
+                        <i class="fas fa-gift"></i>
+                    </div>
+
+                    <h3 id="adTitle" class="heading-font font-black text-xl text-white mb-2 leading-snug">
+                        "¡Bono gratis de $50.000 para comenzar a jugar YA!"
+                    </h3>
+                    <p id="adSubtext" class="text-xs text-slate-300 mb-4">
+                        Regístrate en 10 segundos y duplica tu saldo inicial sin poner un solo peso.
+                    </p>
+
+                    <div class="w-full py-2.5 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow opacity-90">
+                        ¡RECLAMAR MI BONO AHORA!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Options -->
+            <div class="space-y-3 max-w-md mx-auto mb-6">
+                <p class="text-xs font-bold text-slate-400 text-center uppercase tracking-wider">¿Qué técnica de persuasión utiliza este anuncio?</p>
+                <div id="adOptionsContainer" class="grid grid-cols-1 gap-2.5">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- Feedback Area -->
+            <div id="adFeedback" class="hidden max-w-md mx-auto p-4 rounded-2xl bg-slate-800 border border-slate-700 text-center screen-fade">
+                <div id="adResultBadge" class="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2"></div>
+                <p id="adResultText" class="text-slate-300 text-xs md:text-sm leading-relaxed mb-4"></p>
+                <button id="btnAdNext" onclick="nextAd()" class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm rounded-xl transition">
+                    SIGUIENTE ANUNCIO <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: NIVEL 3 - DECISIONES Y CONSECUENCIAS -->
+        <section id="screenLevel3" class="w-full max-w-4xl glass-panel p-5 md:p-8 rounded-3xl shadow-2xl hidden screen-fade">
+            <div class="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/50">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                        Nivel 3: 💸 Una decisión, muchas consecuencias
+                    </span>
+                    <h2 class="heading-font font-bold text-2xl text-white mt-1">Simulador de Impacto</h2>
+                </div>
+            </div>
+
+            <!-- Scenario Card -->
+            <div class="bg-slate-900/80 border border-slate-700 p-5 rounded-2xl mb-6 shadow-md">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xl shrink-0">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base md:text-lg mb-1">Situación Actual:</h3>
+                        <p id="decisionScenarioText" class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                            Recibiste $10.000 de tu mesada o trabajo personal. Apostaste $2.000 en una app pensando que duplicarías el dinero, pero los perdiste en segundos. Sientes frustración y aparece una notificación prometiendo recuperar lo perdido si vuelves a apostar.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Life Indicators Dashboard -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                <!-- Money Indicator -->
+                <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400 font-bold mb-1"><i class="fas fa-wallet text-emerald-400 mr-1"></i> Dinero</div>
+                    <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden my-1.5 p-0.5">
+                        <div id="barMoney" class="bg-emerald-500 h-full rounded-full bar-transition" style="width: 80%"></div>
+                    </div>
+                    <span id="valMoney" class="text-xs font-extrabold text-emerald-400">$8.000</span>
+                </div>
+
+                <!-- Emotion Indicator -->
+                <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400 font-bold mb-1"><i class="fas fa-heart text-rose-400 mr-1"></i> Bienestar</div>
+                    <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden my-1.5 p-0.5">
+                        <div id="barEmotion" class="bg-rose-500 h-full rounded-full bar-transition" style="width: 70%"></div>
+                    </div>
+                    <span id="valEmotion" class="text-xs font-extrabold text-rose-400">Estable</span>
+                </div>
+
+                <!-- Relationships Indicator -->
+                <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400 font-bold mb-1"><i class="fas fa-users text-indigo-400 mr-1"></i> Vínculos</div>
+                    <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden my-1.5 p-0.5">
+                        <div id="barSocial" class="bg-indigo-500 h-full rounded-full bar-transition" style="width: 85%"></div>
+                    </div>
+                    <span id="valSocial" class="text-xs font-extrabold text-indigo-400">Buenas</span>
+                </div>
+
+                <!-- Studies / Projects Indicator -->
+                <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400 font-bold mb-1"><i class="fas fa-graduation-cap text-amber-400 mr-1"></i> Proyectos</div>
+                    <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden my-1.5 p-0.5">
+                        <div id="barStudies" class="bg-amber-500 h-full rounded-full bar-transition" style="width: 90%"></div>
+                    </div>
+                    <span id="valStudies" class="text-xs font-extrabold text-amber-400">Enfocado</span>
+                </div>
+            </div>
+
+            <!-- Choice Buttons -->
+            <div id="decisionOptions" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                <button onclick="makeDecision('stop')" class="glass-button p-4 rounded-2xl text-left border border-emerald-500/30 hover:border-emerald-500/80 transition flex flex-col justify-between group">
+                    <div>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold mb-2 group-hover:scale-110 transition">A</div>
+                        <h4 class="font-bold text-white text-sm mb-1">Detenerme y cuidar mi dinero</h4>
+                        <p class="text-xs text-slate-400">Acepto la pérdida inicial y protejo mis $8.000 restantes.</p>
+                    </div>
+                </button>
+
+                <button onclick="makeDecision('gamble')" class="glass-button p-4 rounded-2xl text-left border border-rose-500/30 hover:border-rose-500/80 transition flex flex-col justify-between group">
+                    <div>
+                        <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold mb-2 group-hover:scale-110 transition">B</div>
+                        <h4 class="font-bold text-white text-sm mb-1">Volver a apostar</h4>
+                        <p class="text-xs text-slate-400">Intento arriesgar $4.000 para tratar de 'recuperar' los $2.000.</p>
+                    </div>
+                </button>
+
+                <button onclick="makeDecision('alternative')" class="glass-button p-4 rounded-2xl text-left border border-indigo-500/30 hover:border-indigo-500/80 transition flex flex-col justify-between group">
+                    <div>
+                        <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold mb-2 group-hover:scale-110 transition">C</div>
+                        <h4 class="font-bold text-white text-sm mb-1">Buscar alternativas y apoyo</h4>
+                        <p class="text-xs text-slate-400">Apago el celular, salgo con amigos o hablo con un adulto de confianza.</p>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Outcome Feedback -->
+            <div id="decisionOutcome" class="hidden p-5 rounded-2xl bg-slate-900 border border-slate-700 text-center screen-fade">
+                <h4 id="outcomeTitle" class="heading-font font-bold text-xl text-white mb-2"></h4>
+                <p id="outcomeDesc" class="text-slate-300 text-xs md:text-sm max-w-xl mx-auto leading-relaxed mb-6"></p>
+                
+                <button onclick="goToLevel4()" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl transition">
+                    CONTINUAR AL EVALUACIÓN FINAL <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: NIVEL FINAL - CUESTIONARIO Y CONCLUSIÓN -->
+        <section id="screenLevel4" class="w-full max-w-3xl glass-panel p-5 md:p-8 rounded-3xl shadow-2xl hidden screen-fade">
+            <div class="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/50">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                        Nivel 4: 🧠 ¿Qué aprendiste?
+                    </span>
+                    <h2 class="heading-font font-bold text-2xl text-white mt-1">Cuestionario de Reflexión</h2>
+                </div>
+                <div class="text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+                    Pregunta <span id="quizIndexDisplay" class="text-amber-400">1</span> de 3
+                </div>
+            </div>
+
+            <!-- Quiz Container -->
+            <div id="quizContainer" class="space-y-6">
+                <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-700">
+                    <h3 id="quizQuestionText" class="font-bold text-base md:text-lg text-white mb-4">
+                        <!-- Loaded via JS -->
+                    </h3>
+                    <div id="quizAnswersContainer" class="space-y-3">
+                        <!-- Loaded via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Evaluation Results Screen -->
+            <div id="finalResultsContainer" class="hidden text-center screen-fade">
+                <div class="w-20 h-20 bg-indigo-600/20 text-indigo-400 border border-indigo-500/40 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-4 shadow-xl">
+                    <i class="fas fa-award"></i>
+                </div>
+
+                <h2 class="heading-font font-black text-3xl text-white mb-1">¡Experiencia Completada!</h2>
+                <p class="text-slate-400 text-sm mb-6">Diagnóstico de Aprendizaje Educativo</p>
+
+                <!-- Knowledge Score Badge -->
+                <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-700 max-w-md mx-auto mb-6 flex items-center justify-around">
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase">Conciencia Crítica</div>
+                        <div id="finalScoreText" class="text-3xl font-black text-indigo-400">3 / 3</div>
+                    </div>
+                    <div class="h-10 w-px bg-slate-800"></div>
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase">Diagnóstico</div>
+                        <div id="finalScoreTag" class="text-sm font-extrabold text-emerald-400">¡Muy Consciente!</div>
+                    </div>
+                </div>
+
+                <!-- Key Takeaways List -->
+                <div class="text-left bg-slate-900/60 p-5 rounded-2xl border border-slate-800 max-w-xl mx-auto mb-8 space-y-3">
+                    <h4 class="font-bold text-slate-200 text-xs uppercase tracking-wider mb-2">3 Aprendizajes Clave para Recordar:</h4>
+                    
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-check-circle text-emerald-400 text-base mt-0.5"></i>
+                        <p class="text-xs md:text-sm text-slate-300"><strong>El azar no es una inversión:</strong> Las casas de apuestas están diseñadas matemáticamente para que la plataforma sea la única ganadora sistemática.</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-check-circle text-emerald-400 text-base mt-0.5"></i>
+                        <p class="text-xs md:text-sm text-slate-300"><strong>La publicidad busca manipularte:</strong> Los bonos "gratis", la urgencia y la presión social son técnicas psicológicas para capturar tu atención.</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-check-circle text-emerald-400 text-base mt-0.5"></i>
+                        <p class="text-xs md:text-sm text-slate-300"><strong>Cuidar tus emociones es ganar:</strong> Perseguir pérdidas solo aumenta el riesgo. Saber frenar a tiempo protege tu salud mental y tus vínculos.</p>
+                    </div>
+                </div>
+
+                <!-- Final Institutional Message Banner -->
+                <div class="bg-gradient-to-r from-indigo-900/60 via-purple-900/60 to-pink-900/60 border border-indigo-500/40 p-6 rounded-2xl max-w-xl mx-auto mb-8 shadow-xl">
+                    <p class="heading-font font-bold text-base md:text-lg text-white italic leading-relaxed">
+                        "Tu dinero, tus emociones y tus proyectos tienen valor. Pensar antes de decidir también es una forma de ganar."
+                    </p>
+                </div>
+
+                <!-- Restart Button -->
+                <button onclick="resetGame()" class="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-base rounded-2xl shadow-xl transition hover:scale-105 active:scale-95">
+                    <i class="fas fa-redo-alt mr-2"></i> REINICIAR PARA OTRO JUGADOR
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full bg-slate-900/60 border-t border-slate-800/80 py-3 text-center text-xs text-slate-500">
+        <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>Stand Escolar Educativo • Prevención de Apuestas Online y Educación Financiera</span>
+            <span class="text-slate-600">Simulación 100% ficticia sin dinero real</span>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /* ==========================================================================
+           AUDIO SYSTEM (Web Audio API Synthesizer - No External Files)
+           ========================================================================== */
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            const text = document.getElementById('soundText');
+            if (soundEnabled) {
+                icon.className = 'fas fa-volume-up text-indigo-400 text-base';
+                text.innerText = 'Sonido';
+                playSound('click');
+            } else {
+                icon.className = 'fas fa-volume-mute text-slate-500 text-base';
+                text.innerText = 'Mute';
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'tick') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.03);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.03);
+                } else if (type === 'win') {
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                        gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                        gain.gain.linearRampToValueAtTime(0, now + idx * 0.08 + 0.2);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.08);
+                        osc.stop(now + idx * 0.08 + 0.2);
+                    });
+                } else if (type === 'lose') {
+                    const notes = [300, 260, 220, 180];
+                    notes.forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                        gain.gain.setValueAtTime(0.15, now + idx * 0.1);
+                        gain.gain.linearRampToValueAtTime(0, now + idx * 0.1 + 0.15);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.1);
+                        osc.stop(now + idx * 0.1 + 0.15);
+                    });
+                }
+            } catch (e) {
+                console.error("Audio playback error:", e);
+            }
+        }
+
+        /* ==========================================================================
+           GAME STATE MANAGEMENT
+           ========================================================================== */
+        let gameState = {
+            currentLevel: 0,
+            // Level 1 state
+            initialChips: 10,
+            chips: 10,
+            bet: 2,
+            rouletteRound: 1,
+            maxRouletteRounds: 4,
+            isSpinning: false,
+            // Level 2 state
+            adIndex: 0,
+            // Level 3 state
+            userDecision: null,
+            // Level 4 state
+            quizIndex: 0,
+            quizScore: 0
+        };
+
+        function setLevelProgress(level) {
+            gameState.currentLevel = level;
+            const container = document.getElementById('progressContainer');
+            const stepLabel = document.getElementById('progressStepLabel');
+            const percentLabel = document.getElementById('progressPercent');
+            const bar = document.getElementById('progressBar');
+
+            if (level === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            const percent = Math.min(100, Math.round((level / 4) * 100));
+            stepLabel.innerText = `Nivel ${level} de 4`;
+            percentLabel.innerText = `${percent}%`;
+            bar.style.width = `${percent}%`;
+        }
+
+        function showScreen(screenId) {
+            const screens = ['screenIntro', 'screenLevel1', 'screenLevel2', 'screenLevel3', 'screenLevel4'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function startGame() {
+            playSound('click');
+            setLevelProgress(1);
+            showScreen('screenLevel1');
+            initRouletteCanvas();
+        }
+
+        function resetGamePrompt() {
+            if (confirm("¿Deseas reiniciar la experiencia desde el inicio?")) {
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            playSound('click');
+            gameState = {
+                currentLevel: 0,
+                initialChips: 10,
+                chips: 10,
+                bet: 2,
+                rouletteRound: 1,
+                maxRouletteRounds: 4,
+                isSpinning: false,
+                adIndex: 0,
+                userDecision: null,
+                quizIndex: 0,
+                quizScore: 0
+            };
+
+            // Reset Level 1 UI
+            document.getElementById('chipsDisplay').innerText = '10';
+            document.getElementById('betAmountDisplay').innerText = '2';
+            document.getElementById('roundCounterText').innerText = '1';
+            document.getElementById('rouletteGameArea').classList.remove('hidden');
+            document.getElementById('rouletteFeedback').classList.add('hidden');
+            document.getElementById('rouletteSummaryArea').classList.add('hidden');
+
+            // Reset Level 2 UI
+            document.getElementById('adFeedback').classList.add('hidden');
+            document.getElementById('adOptionsContainer').classList.remove('pointer-events-none');
+
+            // Reset Level 3 UI
+            document.getElementById('decisionOptions').classList.remove('hidden');
+            document.getElementById('decisionOutcome').classList.add('hidden');
+            updateLifeIndicators(80, 70, 85, 90, 8000);
+
+            // Reset Level 4 UI
+            document.getElementById('quizContainer').classList.remove('hidden');
+            document.getElementById('finalResultsContainer').classList.add('hidden');
+
+            setLevelProgress(0);
+            showScreen('screenIntro');
+        }
+
+        /* ==========================================================================
+           LEVEL 1: RULETA ANIMADA (AZAR O NEGOCIO)
+           ========================================================================== */
+        const rouletteSectors = [
+            { label: 'GANA x2', color: '#10b981', isWin: true },  // Green
+            { label: 'PIERDE',  color: '#ef4444', isWin: false }, // Red
+            { label: 'PIERDE',  color: '#dc2626', isWin: false }, // Red
+            { label: 'GANA x2', color: '#059669', isWin: true },  // Green
+            { label: 'PIERDE',  color: '#ef4444', isWin: false }, // Red
+            { label: 'PIERDE',  color: '#b91c1c', isWin: false }, // Red
+            { label: 'GANA x2', color: '#10b981', isWin: true },  // Green
+            { label: 'PIERDE',  color: '#ef4444', isWin: false }  // Red
+        ];
+
+        let canvas, ctx;
+        let currentAngle = 0;
+
+        function initRouletteCanvas() {
+            canvas = document.getElementById('rouletteCanvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            drawRoulette(currentAngle);
+        }
+
+        function drawRoulette(angle) {
+            if (!ctx) return;
+            const numSectors = rouletteSectors.length;
+            const radius = canvas.width / 2;
+            const sliceAngle = (2 * Math.PI) / numSectors;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Save context for rotation
+            ctx.save();
+            ctx.translate(radius, radius);
+            ctx.rotate(angle);
+
+            for (let i = 0; i < numSectors; i++) {
+                const sector = rouletteSectors[i];
+                const startA = i * sliceAngle;
+                const endA = startA + sliceAngle;
+
+                // Sector wedge
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, radius - 8, startA, endA);
+                ctx.closePath();
+                ctx.fillStyle = sector.color;
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#1e293b';
+                ctx.stroke();
+
+                // Sector text
+                ctx.save();
+                ctx.rotate(startA + sliceAngle / 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px Plus Jakarta Sans, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(sector.label, radius - 25, 4);
+                ctx.restore();
+            }
+
+            // Center Pin Wheel
+            ctx.beginPath();
+            ctx.arc(0, 0, 22, 0, 2 * Math.PI);
+            ctx.fillStyle = '#0f172a';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#fbbf24';
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function adjustBet(delta) {
+            playSound('click');
+            let newBet = gameState.bet + delta;
+            if (newBet >= 1 && newBet <= gameState.chips) {
+                gameState.bet = newBet;
+                document.getElementById('betAmountDisplay').innerText = gameState.bet;
+            }
+        }
+
+        function spinRoulette() {
+            if (gameState.isSpinning) return;
+            if (gameState.chips <= 0) {
+                alert("No tienes suficiente saldo para apostar.");
+                return;
+            }
+
+            initAudio();
+            playSound('click');
+            gameState.isSpinning = true;
+
+            // Disable buttons during spin
+            document.getElementById('btnSpin').disabled = true;
+            document.getElementById('btnSpin').classList.add('opacity-50');
+            document.getElementById('btnBetMinus').disabled = true;
+            document.getElementById('btnBetPlus').disabled = true;
+
+            // House Edge logic: 65% loss probability override to demonstrate house advantage
+            const numSectors = rouletteSectors.length;
+            const sliceAngle = (2 * Math.PI) / numSectors;
+
+            // Pick winning vs losing sector
+            const isHouseWin = Math.random() < 0.65; 
+            let targetSectorIndex;
+
+            if (isHouseWin) {
+                const losingIndices = rouletteSectors.map((s, idx) => s.isWin ? -1 : idx).filter(i => i !== -1);
+                targetSectorIndex = losingIndices[Math.floor(Math.random() * losingIndices.length)];
+            } else {
+                const winningIndices = rouletteSectors.map((s, idx) => s.isWin ? idx : -1).filter(i => i !== -1);
+                targetSectorIndex = winningIndices[Math.floor(Math.random() * winningIndices.length)];
+            }
+
+            // Calculate rotation to land target sector under top pointer (-90 degrees / -PI/2)
+            const targetSectorAngle = targetSectorIndex * sliceAngle + sliceAngle / 2;
+            const extraRounds = 5 + Math.floor(Math.random() * 3); // 5 to 7 full rotations
+            const finalAngle = (Math.PI * 2 * extraRounds) + (Math.PI * 1.5 - targetSectorAngle);
+
+            let startTimestamp = null;
+            const duration = 3500; // 3.5 seconds spin
+            let lastTickAngle = 0;
+
+            function animateSpin(timestamp) {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const elapsed = timestamp - startTimestamp;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Ease-out cubic deceleration
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                currentAngle = finalAngle * easeOut;
+
+                drawRoulette(currentAngle);
+
+                // Sound ticks on sector change
+                if (currentAngle - lastTickAngle > sliceAngle / 2) {
+                    playSound('tick');
+                    lastTickAngle = currentAngle;
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateSpin);
+                } else {
+                    // Spin finished
+                    gameState.isSpinning = false;
+                    resolveRouletteRound(targetSectorIndex);
+                }
+            }
+
+            requestAnimationFrame(animateSpin);
+        }
+
+        function resolveRouletteRound(sectorIndex) {
+            const sector = rouletteSectors[sectorIndex];
+            const feedbackBox = document.getElementById('rouletteFeedback');
+            const badge = document.getElementById('rouletteResultBadge');
+            const title = document.getElementById('rouletteResultTitle');
+            const desc = document.getElementById('rouletteResultDesc');
+
+            if (sector.isWin) {
+                playSound('win');
+                const winAmount = gameState.bet * 2;
+                gameState.chips += gameState.bet; // Net +bet
+                badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                badge.innerText = '¡SECTOR GANADOR!';
+                title.innerText = `¡Ganaste ${winAmount} fichas!`;
+                desc.innerText = 'Tuviste suerte en este giro. Pero ten en cuenta: los impulsos de dopamina por ganar hacen que quieras seguir arriesgando hasta perderlo todo.';
+            } else {
+                playSound('lose');
+                gameState.chips -= gameState.bet;
+                badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 bg-rose-500/20 text-rose-400 border border-rose-500/30';
+                badge.innerText = 'SECTOR PERDEDOR';
+                title.innerText = `Perdiste ${gameState.bet} fichas`;
+                desc.innerText = 'El resultado fue en contra. Es muy común sentir la tentación inmediata de doblar la apuesta para recuperar lo perdido.';
+            }
+
+            // Update UI
+            document.getElementById('chipsDisplay').innerText = gameState.chips;
+            gameState.bet = Math.min(gameState.bet, Math.max(1, gameState.chips));
+            document.getElementById('betAmountDisplay').innerText = gameState.chips > 0 ? gameState.bet : 0;
+
+            feedbackBox.classList.remove('hidden');
+        }
+
+        function nextRouletteStep() {
+            playSound('click');
+            document.getElementById('rouletteFeedback').classList.add('hidden');
+
+            if (gameState.chips <= 0 || gameState.rouletteRound >= gameState.maxRouletteRounds) {
+                finishRouletteLevel();
+            } else {
+                gameState.rouletteRound++;
+                document.getElementById('roundCounterText').innerText = gameState.rouletteRound;
+                
+                // Re-enable spin button
+                document.getElementById('btnSpin').disabled = false;
+                document.getElementById('btnSpin').classList.remove('opacity-50');
+                document.getElementById('btnBetMinus').disabled = false;
+                document.getElementById('btnBetPlus').disabled = false;
+            }
+        }
+
+        function retireFromRoulette() {
+            playSound('click');
+            finishRouletteLevel();
+        }
+
+        function finishRouletteLevel() {
+            document.getElementById('rouletteGameArea').classList.add('hidden');
+            document.getElementById('rouletteFeedback').classList.add('hidden');
+            
+            // Show Chart Summary
+            const summaryArea = document.getElementById('rouletteSummaryArea');
+            summaryArea.classList.remove('hidden');
+
+            document.getElementById('chartValStart').innerText = `${gameState.initialChips} Fichas`;
+            document.getElementById('chartValEnd').innerText = `${gameState.chips} Fichas`;
+
+            const endBar = document.getElementById('chartBarEnd');
+            const percentHeight = Math.min(100, Math.max(5, (gameState.chips / gameState.initialChips) * 60));
+            endBar.style.height = `${percentHeight}%`;
+
+            if (gameState.chips < gameState.initialChips) {
+                endBar.className = 'w-full max-w-[60px] bg-rose-500 rounded-t-lg transition-all duration-700';
+            } else {
+                endBar.className = 'w-full max-w-[60px] bg-emerald-500 rounded-t-lg transition-all duration-700';
+            }
+        }
+
+        function goToLevel2() {
+            playSound('click');
+            setLevelProgress(2);
+            showScreen('screenLevel2');
+            loadAd(0);
+        }
+
+        /* ==========================================================================
+           LEVEL 2: TE QUIEREN HACER CLIC (ANUNCIOS TRAMPA)
+           ========================================================================== */
+        const adsData = [
+            {
+                title: '"¡Bono gratis de $50.000 para comenzar a jugar YA!"',
+                subtext: 'Regístrate en 10 segundos y duplica tu saldo inicial sin poner un solo peso.',
+                icon: 'fa-gift',
+                iconColor: 'text-indigo-400',
+                correctType: 'bono',
+                options: [
+                    { id: 'bono', label: 'Bonificación / Enganche para nuevos usuarios' },
+                    { id: 'urgencia', label: 'Urgencia o límite de tiempo' },
+                    { id: 'presion', label: 'Presión social de pares' },
+                    { id: 'estafa', label: 'Promesa de ganancia sin riesgo' }
+                ],
+                explanation: '¡Correcto! Es un enganche publicitario. Los "bonos gratis" siempre incluyen cláusulas ocultas que te obligan a apostar mucho más dinero real antes de poder retirar un solo centavo.'
+            },
+            {
+                title: '"¡Última oportunidad! Quedan 3 cupos con multiplicador x10 en 2 minutos."',
+                subtext: 'Aprovecha este multiplicador exclusivo antes de que se agoten las plazas.',
+                icon: 'fa-hourglass-half',
+                iconColor: 'text-amber-400',
+                correctType: 'urgencia',
+                options: [
+                    { id: 'bono', label: 'Regalo publicitario' },
+                    { id: 'urgencia', label: 'Urgencia sintética / Crear ansiedad' },
+                    { id: 'presion', label: 'Aceptación en el grupo' },
+                    { id: 'estafa', label: 'Validación de identidad' }
+                ],
+                explanation: '¡Excelente detección! La falsa urgencia genera un pico de ansiedad (FOMO) para que tomes decisiones impulsivas sin detenerte a pensar.'
+            },
+            {
+                title: '"Todos tus compañeros de curso ya están ganando dinero hoy."',
+                subtext: 'No te quedes afuera mientras los demás aumentan su saldo diariamente.',
+                icon: 'fa-users',
+                iconColor: 'text-purple-400',
+                correctType: 'presion',
+                options: [
+                    { id: 'bono', label: 'Bono de bienvenida' },
+                    { id: 'urgencia', label: 'Descuento por tiempo limitado' },
+                    { id: 'presion', label: 'Presión social / Sentido de pertenencia' },
+                    { id: 'estafa', label: 'Acceso vip restringido' }
+                ],
+                explanation: '¡Exacto! Apelan a la necesidad de pertenecer al grupo social. En realidad, la mayoría pierde en silencio y solo publica cuando gana.'
+            },
+            {
+                title: '"Ganancia 100% garantizada en slots: ingresa tu DNI y tarjeta."',
+                subtext: 'Algoritmo infalible comprobado por expertos. Activa tu cuenta oficial ahora.',
+                icon: 'fa-shield-alt',
+                iconColor: 'text-rose-400',
+                correctType: 'estafa',
+                options: [
+                    { id: 'bono', label: 'Estrategia de fidelización' },
+                    { id: 'urgencia', label: 'Cuenta regresiva' },
+                    { id: 'presion', label: 'Recomendación comunitaria' },
+                    { id: 'estafa', label: 'Promesa engañosa / Riesgo de phishing o estafa' }
+                ],
+                explanation: '¡Absolutamente correcto! En el juego de azar NO existen ganancias 100% garantizadas. Además, entregar DNI y datos bancarios a sitios no regulados te expone al robo de identidad.'
+            }
+        ];
+
+        function loadAd(index) {
+            gameState.adIndex = index;
+            document.getElementById('adIndexDisplay').innerText = index + 1;
+
+            const ad = adsData[index];
+            document.getElementById('adTitle').innerText = ad.title;
+            document.getElementById('adSubtext').innerText = ad.subtext;
+            document.getElementById('adIcon').innerHTML = `<i class="fas ${ad.icon} ${ad.iconColor}"></i>`;
+
+            // Render option buttons
+            const container = document.getElementById('adOptionsContainer');
+            container.innerHTML = '';
+            container.classList.remove('pointer-events-none');
+
+            ad.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full py-3 px-4 glass-button text-left font-semibold text-xs sm:text-sm text-slate-200 rounded-xl hover:border-purple-500/50 transition flex items-center justify-between';
+                btn.innerHTML = `<span>${opt.label}</span> <i class="fas fa-chevron-right text-slate-500 text-xs"></i>`;
+                btn.onclick = () => selectAdOption(opt.id);
+                container.appendChild(btn);
+            });
+
+            document.getElementById('adFeedback').classList.add('hidden');
+        }
+
+        function selectAdOption(selectedId) {
+            playSound('click');
+            const ad = adsData[gameState.adIndex];
+            const feedbackBox = document.getElementById('adFeedback');
+            const badge = document.getElementById('adResultBadge');
+            const text = document.getElementById('adResultText');
+
+            document.getElementById('adOptionsContainer').classList.add('pointer-events-none');
+
+            if (selectedId === ad.correctType) {
+                playSound('win');
+                badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                badge.innerHTML = '<i class="fas fa-check-circle mr-1"></i> ¡IDENTIFICACIÓN CORRECTA!';
+            } else {
+                playSound('lose');
+                badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 bg-amber-500/20 text-amber-400 border border-amber-500/30';
+                badge.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i> IDENTIFICACIÓN REGULAR';
+            }
+
+            text.innerText = ad.explanation;
+            feedbackBox.classList.remove('hidden');
+        }
+
+        function nextAd() {
+            playSound('click');
+            if (gameState.adIndex + 1 < adsData.length) {
+                loadAd(gameState.adIndex + 1);
+            } else {
+                goToLevel3();
+            }
+        }
+
+        /* ==========================================================================
+           LEVEL 3: DECISIONES Y CONSECUENCIAS
+           ========================================================================== */
+        function goToLevel3() {
+            playSound('click');
+            setLevelProgress(3);
+            showScreen('screenLevel3');
+        }
+
+        function updateLifeIndicators(moneyPct, emotionPct, socialPct, studiesPct, moneyVal) {
+            document.getElementById('barMoney').style.width = `${moneyPct}%`;
+            document.getElementById('barEmotion').style.width = `${emotionPct}%`;
+            document.getElementById('barSocial').style.width = `${socialPct}%`;
+            document.getElementById('barStudies').style.width = `${studiesPct}%`;
+
+            document.getElementById('valMoney').innerText = `$${moneyVal.toLocaleString()}`;
+            
+            // Textual feedback
+            document.getElementById('valEmotion').innerText = emotionPct >= 70 ? 'Tranquilo' : emotionPct >= 40 ? 'Estresado' : 'Angustiado';
+            document.getElementById('valSocial').innerText = socialPct >= 70 ? 'Sólidas' : socialPct >= 40 ? 'Distant' : 'Aislado';
+            document.getElementById('valStudies').innerText = studiesPct >= 70 ? 'Enfocado' : studiesPct >= 40 ? 'Distraído' : 'Afectado';
+        }
+
+        function makeDecision(type) {
+            playSound('click');
+            gameState.userDecision = type;
+
+            document.getElementById('decisionOptions').classList.add('hidden');
+            const outcomeBox = document.getElementById('decisionOutcome');
+            const title = document.getElementById('outcomeTitle');
+            const desc = document.getElementById('outcomeDesc');
+
+            if (type === 'stop') {
+                playSound('win');
+                updateLifeIndicators(80, 85, 90, 95, 8000);
+                title.innerText = " Decisión: Frenar a tiempo y cuidar tu dinero";
+                title.className = "heading-font font-bold text-xl text-emerald-400 mb-2";
+                desc.innerText = "¡Excelente decisión! Aceptaste una pérdida pequeña ($2.000) y mantuviste intacto tu capital principal ($8.000). Al retirarte, protegiste tu tranquilidad mental, tu concentración en los estudios y la confianza de tu familia.";
+            } else if (type === 'gamble') {
+                playSound('lose');
+                updateLifeIndicators(20, 20, 30, 35, 2000);
+                title.innerText = " Decisión: Perseguir la pérdida volviendo a apostar";
+                title.className = "heading-font font-bold text-xl text-rose-400 mb-2";
+                desc.innerText = "Resultado negativo: Volviste a apostar impulsivamente $4.000 adicionales y los perdiste. Ahora solo te quedan $2.000. Sientes ansiedad, rabia y distracción constante en la escuela, pensando cómo ocultarle lo sucedido a tus padres.";
+            } else if (type === 'alternative') {
+                playSound('win');
+                updateLifeIndicators(80, 95, 95, 90, 8000);
+                title.innerText = " Decisión: Desconexión y apoyo de personas cercanas";
+                title.className = "heading-font font-bold text-xl text-indigo-400 mb-2";
+                desc.innerText = "¡La mejor estrategia emocional! Hablar con un amigo o adulto de confianza desarma la presión del juego. Invertiste el dinero restante en una salida real o un proyecto personal, fortaleciendo tus vínculos verdaderos.";
+            }
+
+            outcomeBox.classList.remove('hidden');
+        }
+
+        function goToLevel4() {
+            playSound('click');
+            setLevelProgress(4);
+            showScreen('screenLevel4');
+            loadQuizQuestion(0);
+        }
+
+        /* ==========================================================================
+           LEVEL 4: CUESTIONARIO Y CONCLUSIÓN
+           ========================================================================== */
+        const quizQuestions = [
+            {
+                q: "1. Si ganas dinero en un giro de ruleta o juego online, ¿qué significa matemáticamente?",
+                options: [
+                    { text: "Que descubriste un método seguro de ganar dinero.", correct: false },
+                    { text: "Un evento de suerte momentánea; a largo plazo la casa siempre tiene ventaja.", correct: true },
+                    { text: "Que el algoritmo del juego te favorecerá en las próximas jugadas.", correct: false }
+                ]
+            },
+            {
+                q: "2. ¿Cuál es el verdadero objetivo de las promociones con 'bonos gratis' o la urgencia en la publicidad?",
+                options: [
+                    { text: "Capturar tu atención y hacerte apostar con impulso anulando tu juicio crítico.", correct: true },
+                    { text: "Regalarte dinero porque la empresa es generosa.", correct: false },
+                    { text: "Ayudarte a pagar tus estudios o consumos personales.", correct: false }
+                ]
+            },
+            {
+                q: "3. Si pierdes dinero en una plataforma de apuestas, ¿cuál es la conducta más responsable?",
+                options: [
+                    { text: "Apostar el doble inmediatamente para recuperarlo rápido.", correct: false },
+                    { text: "Pedir prestado dinero a amigos para no tocar el tuyo.", correct: false },
+                    { text: "Detenerte, aceptar la pérdida inicial y pedir ayuda si sientes impulso irreprimible.", correct: true }
+                ]
+            }
+        ];
+
+        function loadQuizQuestion(index) {
+            gameState.quizIndex = index;
+            document.getElementById('quizIndexDisplay').innerText = index + 1;
+
+            const qData = quizQuestions[index];
+            document.getElementById('quizQuestionText').innerText = qData.q;
+
+            const container = document.getElementById('quizAnswersContainer');
+            container.innerHTML = '';
+
+            qData.options.forEach((opt, optIdx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full p-4 glass-button text-left font-semibold text-xs sm:text-sm text-slate-200 rounded-2xl hover:border-amber-500/50 transition flex items-start gap-3';
+                btn.innerHTML = `
+                    <span class="w-6 h-6 rounded-full bg-slate-800 text-amber-400 font-bold text-xs flex items-center justify-center shrink-0 border border-slate-700">${String.fromCharCode(65 + optIdx)}</span>
+                    <span class="mt-0.5">${opt.text}</span>
+                `;
+                btn.onclick = () => answerQuiz(opt.correct);
+                container.appendChild(btn);
+            });
+        }
+
+        function answerQuiz(isCorrect) {
+            if (isCorrect) {
+                playSound('win');
+                gameState.quizScore++;
+            } else {
+                playSound('lose');
+            }
+
+            if (gameState.quizIndex + 1 < quizQuestions.length) {
+                loadQuizQuestion(gameState.quizIndex + 1);
+            } else {
+                showFinalResults();
+            }
+        }
+
+        function showFinalResults() {
+            document.getElementById('quizContainer').classList.add('hidden');
+            const finalRes = document.getElementById('finalResultsContainer');
+            finalRes.classList.remove('hidden');
+
+            const scoreText = document.getElementById('finalScoreText');
+            const scoreTag = document.getElementById('finalScoreTag');
+
+            scoreText.innerText = `${gameState.quizScore} / ${quizQuestions.length}`;
+
+            if (gameState.quizScore === 3) {
+                scoreTag.innerText = " ¡Pensamiento Crítico Excelente!";
+                scoreTag.className = "text-sm font-extrabold text-emerald-400";
+            } else if (gameState.quizScore === 2) {
+                scoreTag.innerText = " ¡Buen Nivel de Conciencia!";
+                scoreTag.className = "text-sm font-extrabold text-indigo-400";
+            } else {
+                scoreTag.innerText = " Requiere Mayor Cuidado";
+                scoreTag.className = "text-sm font-extrabold text-amber-400";
+            }
+        }
+
+        // Window resize event handler for Canvas responsiveness
+        window.addEventListener('resize', () => {
+            if (canvas && !document.getElementById('screenLevel1').classList.contains('hidden')) {
+                drawRoulette(currentAngle);
+            }
+        });
+    </script>
+</body>
+</html>
