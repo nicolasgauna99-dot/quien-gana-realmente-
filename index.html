@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Quién gana realmente? — Juego educativo</title>
+<style>
+:root{
+  --bg:#101426; --panel:#1b2240; --panel2:#252e52; --text:#f7f8ff;
+  --muted:#b8c1e3; --cyan:#57e6d5; --pink:#ff6f91; --yellow:#ffd166;
+  --purple:#a99bff; --green:#77e39b; --red:#ff7777; --border:rgba(255,255,255,.13);
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#222d58 0%,var(--bg) 58%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;min-height:100vh}
+button,select{font:inherit}
+button{border:0;cursor:pointer;transition:transform .16s,filter .16s,opacity .16s}
+button:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.08)}
+button:active:not(:disabled){transform:translateY(0) scale(.98)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.topbar{max-width:1050px;margin:auto;padding:18px 18px 8px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{font-weight:900;letter-spacing:.02em;font-size:clamp(14px,2vw,18px)}
+.sound{background:#ffffff12;color:var(--text);border:1px solid var(--border);border-radius:12px;padding:9px 12px}
+main{max-width:1050px;margin:auto;padding:12px 18px 36px}
+.hero{text-align:center;padding:18px 0 20px}
+.eyebrow{color:var(--cyan);font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-size:12px}
+h1{font-size:clamp(30px,6vw,54px);line-height:1.04;margin:10px 0}
+h1 span{color:var(--yellow)}
+.subtitle{color:var(--muted);max-width:680px;margin:0 auto;line-height:1.55}
+.progress-wrap{max-width:760px;margin:24px auto 0}
+.progress-label{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:8px}
+.progress{height:8px;border-radius:99px;background:#ffffff18;overflow:hidden}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--purple),var(--pink));border-radius:99px;transition:width .4s}
+.screen{display:none;animation:appear .32s ease both}
+.screen.active{display:block}
+@keyframes appear{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.panel{background:linear-gradient(145deg,#20294aee,#171d36ee);border:1px solid var(--border);border-radius:24px;padding:clamp(18px,4vw,30px);box-shadow:0 18px 55px #0003}
+h2{font-size:clamp(23px,4vw,32px);margin:0 0 8px}
+.lead{color:var(--muted);line-height:1.55;margin:0 0 22px}
+.btn{border-radius:14px;padding:13px 18px;font-weight:850;color:#101426;background:var(--cyan);box-shadow:0 7px 0 #269c91}
+.btn.secondary{background:#303a63;color:var(--text);box-shadow:none;border:1px solid var(--border)}
+.btn.pink{background:var(--pink);box-shadow:0 7px 0 #b84465}
+.btn.yellow{background:var(--yellow);box-shadow:0 7px 0 #b28a30}
+.btn.purple{background:var(--purple);box-shadow:0 7px 0 #6556b7}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0}
+.feature{background:#ffffff08;border:1px solid var(--border);border-radius:18px;padding:18px;text-align:left}.launch-card{font:inherit;color:var(--text);width:100%;cursor:pointer}.launch-card:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+.feature .emoji{font-size:30px}
+.feature h3{margin:8px 0 5px;font-size:17px}
+.feature p{margin:0;color:var(--muted);font-size:14px;line-height:1.45}
+.notice{border-left:4px solid var(--yellow);padding:12px 14px;background:#ffd16612;border-radius:0 12px 12px 0;color:#f5e8be;line-height:1.5;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 22px}
+.stat{background:#ffffff09;border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center}
+.stat small{display:block;color:var(--muted);font-size:12px}
+.stat strong{font-size:24px;display:block;margin-top:2px}
+.game-layout{display:grid;grid-template-columns:minmax(230px, .95fr) minmax(260px,1.05fr);gap:24px;align-items:center}
+.wheel-area{position:relative;display:grid;place-items:center;padding:8px}
+.pointer{position:absolute;z-index:4;top:0;left:50%;transform:translateX(-50%);width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-top:28px solid var(--yellow);filter:drop-shadow(0 3px 3px #0007)}
+.wheel-shell{width:min(70vw,330px);height:min(70vw,330px);max-width:330px;max-height:330px;border-radius:50%;padding:9px;background:linear-gradient(135deg,#fff4bf,#8c75ff,#ff6f91);box-shadow:0 0 0 5px #ffffff10,0 0 40px #8c75ff25}
+.wheel{width:100%;height:100%;border-radius:50%;position:relative;border:4px solid #fff9;background:conic-gradient(from 0deg,#ff6f91 0deg 45deg,#ffd166 45deg 90deg,#57e6d5 90deg 135deg,#a99bff 135deg 180deg,#ff7777 180deg 225deg,#77e39b 225deg 270deg,#ff9c6e 270deg 315deg,#75b9ff 315deg 360deg);transition:transform 5s cubic-bezier(.12,.72,.08,1);overflow:hidden}
+.wheel-label{position:absolute;left:50%;top:50%;width:42%;height:20px;transform-origin:0 50%;font-size:clamp(9px,1.8vw,12px);font-weight:950;color:#14172a;text-align:right;padding-right:4px;text-shadow:0 1px 0 #ffffff80;white-space:nowrap}
+.wheel-center{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);width:62px;height:62px;border-radius:50%;background:#171d36;border:5px solid #fff9;display:grid;place-items:center;font-size:22px;box-shadow:0 3px 10px #0006}
+.controls{background:#ffffff08;border:1px solid var(--border);border-radius:18px;padding:18px}
+label{display:block;font-size:13px;color:var(--muted);margin:0 0 8px}
+select{width:100%;padding:12px;background:#151b32;color:var(--text);border:1px solid var(--border);border-radius:12px;margin-bottom:14px}
+.result{min-height:58px;background:#ffffff09;border:1px solid var(--border);border-radius:14px;padding:13px;margin-top:14px;line-height:1.45}
+.result strong{display:block;color:var(--yellow);margin-bottom:3px}
+.small{font-size:13px;color:var(--muted);line-height:1.5}
+.level-tag{display:inline-flex;align-items:center;gap:8px;background:#ffffff10;border:1px solid var(--border);padding:7px 11px;border-radius:999px;color:var(--muted);font-size:12px;font-weight:800;margin-bottom:14px}
+.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.choice{background:#ffffff0a;color:var(--text);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:left;min-height:88px;font-weight:750;line-height:1.35}
+.choice span{display:block;font-size:25px;margin-bottom:7px}
+.choice.selected{border-color:var(--cyan);background:#57e6d51a;box-shadow:inset 0 0 0 1px var(--cyan)}
+.feedback{display:none;margin-top:16px;padding:15px;border-radius:14px;line-height:1.5;background:#57e6d512;border:1px solid #57e6d555}
+.feedback.show{display:block;animation:appear .25s ease}
+.feedback.bad{background:#ff777712;border-color:#ff777755}
+.ad-card{min-height:190px;border-radius:22px;background:linear-gradient(135deg,#613b9b,#b24c8a);padding:22px;display:flex;flex-direction:column;justify-content:space-between;margin-bottom:20px;position:relative;overflow:hidden}
+.ad-card:after{content:"";position:absolute;width:170px;height:170px;border-radius:50%;background:#ffffff12;right:-45px;top:-45px}
+.ad-brand{font-size:12px;text-transform:uppercase;letter-spacing:.14em;font-weight:900;opacity:.85}
+.ad-text{font-size:clamp(22px,4vw,32px);font-weight:950;line-height:1.12;max-width:500px;position:relative;z-index:1}
+.ad-foot{font-size:12px;opacity:.8;margin-top:14px}
+.question{font-size:19px;font-weight:850;margin-bottom:16px;line-height:1.4}
+.quiz-option{display:block;width:100%;text-align:left;background:#ffffff09;border:1px solid var(--border);border-radius:13px;padding:13px 15px;color:var(--text);margin:9px 0}
+.quiz-option.correct{border-color:var(--green);background:#77e39b15}
+.quiz-option.incorrect{border-color:var(--red);background:#ff777715}
+.consequence-map{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0}
+.consequence{background:#ffffff09;border:1px solid var(--border);border-radius:14px;padding:13px}
+.consequence b{display:block;margin-bottom:5px}
+.consequence span{font-size:13px;color:var(--muted)}
+.final-score{font-size:clamp(42px,8vw,72px);font-weight:950;color:var(--cyan);line-height:1}
+footer{text-align:center;color:#8f9ac2;font-size:12px;margin-top:20px}
+@media(max-width:720px){
+ .grid3{grid-template-columns:1fr;gap:10px}
+ .feature{display:flex;gap:12px;align-items:flex-start;padding:13px}
+ .feature .emoji{font-size:26px}
+ .feature h3{margin-top:0}
+ .game-layout{grid-template-columns:1fr}
+ .wheel-shell{width:min(74vw,300px);height:min(74vw,300px)}
+ .stats{gap:7px}.stat{padding:10px 6px}.stat strong{font-size:20px}
+ .choice-grid{grid-template-columns:1fr}
+ .panel{border-radius:20px}
+}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">🎮 PROYECTO EDUCATIVO · ECONOMÍA</div>
+  <button id="soundBtn" class="sound" aria-pressed="false">🔊 Sonido: apagado</button>
+</div>
+<main>
+  <div class="hero">
+    <div class="eyebrow">Apuestas · decisiones · riesgos</div>
+    <h1>¿Quién gana <span>realmente?</span></h1>
+    <p class="subtitle">Un recorrido interactivo para descubrir cómo influyen el azar, la publicidad y nuestras emociones en las decisiones económicas.</p>
+    <div class="progress-wrap">
+      <div class="progress-label"><span id="progressText">Inicio</span><span id="progressPct">0%</span></div>
+      <div class="progress"><div id="progressFill" class="progress-fill"></div></div>
+    </div>
+  </div>
+
+  <section id="start" class="screen active">
+    <div class="panel">
+      <div class="grid3">
+        <button type="button" class="feature launch-card" data-launch="roulette"><div class="emoji">🎰</div><div><h3>1. Azar o negocio</h3><p>Girás una ruleta y observás cómo cambia tu saldo ficticio.</p></div></button>
+        <button type="button" class="feature launch-card" data-launch="ads"><div class="emoji">📱</div><div><h3>2. Te quieren hacer clic</h3><p>Descubrís las estrategias ocultas en anuncios digitales.</p></div></button>
+        <button type="button" class="feature launch-card" data-launch="decisions"><div class="emoji">🧠</div><div><h3>3. Decisiones y consecuencias</h3><p>Elegís cómo actuar y comprobás qué podés proteger.</p></div></button>
+      </div>
+      <div class="notice">Este juego es educativo: no usa dinero real ni predice resultados de apuestas. No hay que contar experiencias personales.</div>
+      <div class="btn-row"><button type="button" id="startBtn" class="btn" onclick="document.getElementById('start').classList.remove('active');document.getElementById('roulette').classList.add('active');document.getElementById('progressText').textContent='Nivel 1 de 3 · Azar o negocio';document.getElementById('progressPct').textContent='8%';document.getElementById('progressFill').style.width='8%';window.scrollTo(0,0);">COMENZAR EXPERIENCIA →</button></div>
+    </div>
+  </section>
+
+  <section id="roulette" class="screen">
+    <div class="panel">
+      <div class="level-tag">🎰 NIVEL 1 · AZAR O NEGOCIO</div>
+      <h2>La casa siempre tiene ventaja</h2>
+      <p class="lead">Tenés 10 fichas ficticias. En cada ronda elegís cuánto arriesgar. Podés parar cuando quieras.</p>
+      <div class="stats">
+        <div class="stat"><small>Fichas disponibles</small><strong id="chips">10</strong></div>
+        <div class="stat"><small>Ronda</small><strong id="round">1/4</strong></div>
+        <div class="stat"><small>Balance neto</small><strong id="net">0</strong></div>
+      </div>
+      <div class="game-layout">
+        <div class="wheel-area">
+          <div class="pointer"></div>
+          <div class="wheel-shell"><div id="wheel" class="wheel">
+            <div class="wheel-label" style="transform:rotate(22.5deg) translateY(-10px)">- apuesta</div>
+            <div class="wheel-label" style="transform:rotate(67.5deg) translateY(-10px)">+1 ficha</div>
+            <div class="wheel-label" style="transform:rotate(112.5deg) translateY(-10px)">- mitad</div>
+            <div class="wheel-label" style="transform:rotate(157.5deg) translateY(-10px)">x2</div>
+            <div class="wheel-label" style="transform:rotate(202.5deg) translateY(-10px)">- apuesta</div>
+            <div class="wheel-label" style="transform:rotate(247.5deg) translateY(-10px)">sin cambio</div>
+            <div class="wheel-label" style="transform:rotate(292.5deg) translateY(-10px)">+ apuesta</div>
+            <div class="wheel-label" style="transform:rotate(337.5deg) translateY(-10px)">- apuesta</div>
+            <div class="wheel-center">🎯</div>
+          </div></div>
+        </div>
+        <div class="controls">
+          <label for="wager">¿Cuántas fichas querés arriesgar?</label>
+          <select id="wager"><option value="1">1 ficha</option><option value="2">2 fichas</option><option value="3">3 fichas</option></select>
+          <button id="spinBtn" class="btn" style="width:100%">GIRAR RULETA</button>
+          <div id="rouletteResult" class="result" aria-live="polite"><strong>Tu decisión</strong>Elegí una apuesta ficticia y girá la ruleta.</div>
+          <p class="small">La ruleta es una simulación educativa. Un resultado anterior no permite predecir el siguiente.</p>
+          <div class="btn-row" style="justify-content:flex-start"><button id="stopBtn" class="btn secondary">RETIRARME</button><button id="nextRoundBtn" class="btn" hidden>CONTINUAR →</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="ads" class="screen">
+    <div class="panel">
+      <div class="level-tag">📱 NIVEL 2 · PUBLICIDAD DIGITAL</div>
+      <h2>Te quieren hacer clic</h2>
+      <p class="lead">Leé el anuncio y seleccioná qué estrategia intenta utilizar.</p>
+      <div class="stats">
+        <div class="stat"><small>Anuncio</small><strong id="adRound">1/4</strong></div>
+        <div class="stat"><small>Identificados</small><strong id="adScore">0</strong></div>
+        <div class="stat"><small>Tiempo</small><strong>Sin apuro</strong></div>
+      </div>
+      <div class="ad-card"><div class="ad-brand">📣 PUBLICIDAD FICTICIA</div><div id="adText" class="ad-text">¡Bono de bienvenida para empezar!</div><div class="ad-foot">Ejemplo creado exclusivamente para aprender a detectar persuasión.</div></div>
+      <div id="adOptions" class="choice-grid"></div>
+      <div id="adFeedback" class="feedback" aria-live="polite"></div>
+      <div class="btn-row"><button id="adNextBtn" class="btn" hidden>SIGUIENTE ANUNCIO →</button></div>
+    </div>
+  </section>
+
+  <section id="decisions" class="screen">
+    <div class="panel">
+      <div class="level-tag">💸 NIVEL 3 · DECISIONES Y CONSECUENCIAS</div>
+      <h2>Una decisión, muchas consecuencias</h2>
+      <p class="lead">Recibiste $10.000. Apostaste $2.000 y los perdiste. Aparece otra oferta y pensás: «Si apuesto una vez más, puedo recuperar lo perdido».</p>
+      <div class="stats">
+        <div class="stat"><small>Dinero restante</small><strong id="moneyLeft">$8.000</strong></div>
+        <div class="stat"><small>Ahorro protegido</small><strong id="protected">$0</strong></div>
+        <div class="stat"><small>Decisión</small><strong id="decisionStep">1/2</strong></div>
+      </div>
+      <div id="decisionQuestion" class="question">¿Qué harías ahora?</div>
+      <div id="decisionOptions" class="choice-grid">
+        <button class="choice" data-decision="stop"><span>🛑</span>Detenerme y cuidar el dinero restante</button>
+        <button class="choice" data-decision="retry"><span>🔄</span>Volver a apostar para recuperar lo perdido</button>
+        <button class="choice" data-decision="alternative"><span>🌱</span>Buscar otra actividad y revisar mi presupuesto</button>
+      </div>
+      <div id="decisionFeedback" class="feedback" aria-live="polite"></div>
+      <div class="consequence-map">
+        <div class="consequence"><b>💰 Economía</b><span id="econCon">El dinero puede destinarse a necesidades y objetivos.</span></div>
+        <div class="consequence"><b>❤️ Emociones</b><span id="emoCon">La frustración puede impulsar decisiones rápidas.</span></div>
+        <div class="consequence"><b>👥 Vínculos</b><span id="socialCon">Hablar con alguien de confianza puede ayudar.</span></div>
+        <div class="consequence"><b>📚 Estudios</b><span id="studyCon">El presupuesto también protege materiales y proyectos.</span></div>
+      </div>
+      <div class="btn-row"><button id="decisionNextBtn" class="btn" hidden>VER CIERRE →</button></div>
+    </div>
+  </section>
+
+  <section id="quiz" class="screen">
+    <div class="panel">
+      <div class="level-tag">🧠 DESAFÍO FINAL</div>
+      <h2>¿Qué aprendiste?</h2>
+      <p class="lead">Respondé tres preguntas para cerrar la experiencia.</p>
+      <div class="stats">
+        <div class="stat"><small>Pregunta</small><strong id="quizRound">1/3</strong></div>
+        <div class="stat"><small>Respuestas correctas</small><strong id="quizScore">0</strong></div>
+        <div class="stat"><small>Aprendizaje</small><strong>En marcha</strong></div>
+      </div>
+      <div id="quizQuestion" class="question"></div>
+      <div id="quizOptions"></div>
+      <div id="quizFeedback" class="feedback" aria-live="polite"></div>
+      <div class="btn-row"><button id="quizNextBtn" class="btn" hidden>SIGUIENTE →</button></div>
+    </div>
+  </section>
+
+  <section id="final" class="screen">
+    <div class="panel" style="text-align:center">
+      <div class="eyebrow">EXPERIENCIA COMPLETADA</div>
+      <h2 style="margin-top:12px">¿Quién gana realmente?</h2>
+      <p class="lead">El objetivo no es ganar fichas: es aprender a reconocer riesgos y cuidar tus recursos.</p>
+      <div class="final-score" id="finalScore">0/3</div>
+      <p class="small">respuestas correctas en el desafío final</p>
+      <div class="grid3">
+        <div class="feature"><div class="emoji">🎲</div><div><h3>El azar</h3><p>Una ganancia ocasional no garantiza la siguiente.</p></div></div>
+        <div class="feature"><div class="emoji">📣</div><div><h3>La influencia</h3><p>La publicidad puede presionarte para actuar rápido.</p></div></div>
+        <div class="feature"><div class="emoji">🌱</div><div><h3>Tus decisiones</h3><p>Detenerse, planificar y pedir ayuda son opciones válidas.</p></div></div>
+      </div>
+      <div class="notice" style="text-align:left"><strong>ANTES:</strong> pensá qué esperás obtener. <strong>DURANTE:</strong> reconocé qué influye en tu decisión. <strong>DESPUÉS:</strong> evaluá las consecuencias.<br><br>Tu dinero, tus emociones y tus proyectos tienen valor. Saber cuándo parar también es ganar.</div>
+      <div class="btn-row"><button id="restartBtn" class="btn">↻ VOLVER A JUGAR</button></div>
+    </div>
+  </section>
+  <footer>Juego educativo sin dinero real · No reemplaza el acompañamiento profesional cuando alguien necesita ayuda.</footer>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const screens = ['start','roulette','ads','decisions','quiz','final'];
+  let currentScreen = 'start';
+  let soundOn = false;
+  let audioCtx = null;
+  let chips = 10, round = 1, wheelRotation = 0, spinning = false, net = 0;
+  let ads = [], adIndex = 0, adScore = 0, adLocked = false;
+  let decision = null, moneyLeft = 8000, protectedMoney = 0;
+  let quizIndex = 0, quizScore = 0, quizLocked = false;
+  let progress = 0;
+
+  function tone(freq=440, duration=.09, type='sine') {
+    if (!soundOn) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+      osc.type = type; osc.frequency.value = freq; gain.gain.value = .035;
+      osc.connect(gain); gain.connect(audioCtx.destination); osc.start();
+      gain.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + duration);
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+  }
+  $('soundBtn').addEventListener('click', () => {
+    soundOn = !soundOn;
+    $('soundBtn').textContent = soundOn ? '🔊 Sonido: activado' : '🔇 Sonido: apagado';
+    $('soundBtn').setAttribute('aria-pressed', String(soundOn));
+    if (soundOn) tone(620,.12);
+  });
+
+  function showScreen(id, pct, label) {
+    currentScreen = id;
+    screens.forEach(s => $(s).classList.toggle('active', s === id));
+    progress = pct;
+    $('progressFill').style.width = pct + '%';
+    $('progressPct').textContent = pct + '%';
+    $('progressText').textContent = label;
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  document.querySelectorAll('[data-launch]').forEach(card => {
+    card.addEventListener('click', () => {
+      const target = card.dataset.launch;
+      if (target === 'roulette') {
+        showScreen('roulette', 8, 'Nivel 1 de 3 · Azar o negocio');
+        updateRoulette();
+      } else if (target === 'ads') {
+        setupAds();
+        showScreen('ads', 38, 'Nivel 2 de 3 · Publicidad digital');
+      } else if (target === 'decisions') {
+        resetDecision();
+        showScreen('decisions', 62, 'Nivel 3 de 3 · Decisiones y consecuencias');
+      }
+      tone(520,.12);
+    });
+  });
+
+  $('startBtn').addEventListener('click', () => {
+    showScreen('roulette', 8, 'Nivel 1 de 3 · Azar o negocio');
+    updateRoulette();
+    tone(520,.12);
+  });
+
+  function updateRoulette() {
+    $('chips').textContent = chips;
+    $('round').textContent = Math.min(round,4) + '/4';
+    $('net').textContent = (net > 0 ? '+' : '') + net;
+    $('wager').querySelectorAll('option').forEach(o => {
+      o.disabled = Number(o.value) > chips;
+    });
+    if (Number($('wager').value) > chips) $('wager').value = String(Math.max(1, Math.min(3,chips)));
+    $('spinBtn').disabled = spinning || chips <= 0 || round > 4;
+    $('stopBtn').disabled = spinning || round > 4;
+  }
+  const outcomes = [
+    {label:'Perdés la apuesta',kind:'loss',color:'#ff7777',delta:w=>-w,explain:'La pérdida reduce tus recursos. No hay garantía de recuperarlos en el siguiente giro.'},
+    {label:'Ganás 1 ficha',kind:'win',color:'#ffd166',delta:w=>1,explain:'Una ganancia pequeña puede sentirse alentadora, pero no predice el próximo resultado.'},
+    {label:'Perdés la mitad',kind:'loss',color:'#57e6d5',delta:w=>-Math.max(1,Math.ceil(w/2)),explain:'Una pérdida parcial también afecta tu saldo y debe tenerse en cuenta.'},
+    {label:'Premio x2',kind:'win',color:'#a99bff',delta:w=>w*2,explain:'Podés ganar en una ronda, pero eso no garantiza ganancias sostenidas.'},
+    {label:'Perdés la apuesta',kind:'loss',color:'#ff7777',delta:w=>-w,explain:'Intentar recuperar de inmediato puede llevar a arriesgar más recursos.'},
+    {label:'Sin cambio',kind:'neutral',color:'#77e39b',delta:w=>0,explain:'A veces no hay cambio. Cada giro es independiente del anterior.'},
+    {label:'Ganás lo arriesgado',kind:'win',color:'#ff9c6e',delta:w=>w,explain:'La ganancia no transforma la apuesta en una inversión segura.'},
+    {label:'Perdés la apuesta',kind:'loss',color:'#75b9ff',delta:w=>-w,explain:'La ruleta no sabe qué pasó antes; no existe un giro que deba compensar una pérdida.'}
+  ];
+  $('spinBtn').addEventListener('click', () => {
+    if (spinning || chips <= 0 || round > 4) return;
+    const wager = Math.min(Number($('wager').value), chips);
+    if (!wager || wager > chips) return;
+    spinning = true;
+    $('spinBtn').disabled = true; $('stopBtn').disabled = true;
+    $('nextRoundBtn').hidden = true;
+    $('rouletteResult').innerHTML = '<strong>La ruleta está girando…</strong>Esperá a que se detenga para ver el resultado.';
+    const idx = Math.floor(Math.random() * outcomes.length);
+    const outcome = outcomes[idx];
+    // CSS conic-gradient begins at the top; center of sector idx is idx*45+22.5 degrees.
+    const targetMod = (360 - (idx * 45 + 22.5)) % 360;
+    const currentMod = ((wheelRotation % 360) + 360) % 360;
+    const delta = (targetMod - currentMod + 360) % 360;
+    wheelRotation += 360 * 5 + delta;
+    $('wheel').style.transform = `rotate(${wheelRotation}deg)`;
+    let ticks = 0;
+    const tick = setInterval(() => { tone(250 + (ticks%4)*45,.025,'square'); ticks++; if(ticks>8) clearInterval(tick); }, 180);
+    window.setTimeout(() => {
+      const change = outcome.delta(wager);
+      chips = Math.max(0, chips + change);
+      net += change;
+      round++;
+      spinning = false;
+      $('rouletteResult').innerHTML = `<strong>${outcome.label} · ${change > 0 ? '+' : ''}${change} ficha${Math.abs(change)===1?'':'s'}</strong>${outcome.explain}`;
+      $('rouletteResult').style.borderColor = outcome.kind === 'loss' ? '#ff777777' : outcome.kind === 'win' ? '#ffd16688' : 'var(--border)';
+      updateRoulette();
+      tone(outcome.kind === 'loss' ? 180 : 620,.18);
+      if (round > 4 || chips <= 0) {
+        $('spinBtn').hidden = true;
+        $('stopBtn').hidden = true;
+        $('nextRoundBtn').hidden = false;
+        $('nextRoundBtn').textContent = 'CONTINUAR →';
+        $('rouletteResult').innerHTML += '<br><br><strong>Reflexión</strong>¿La ganancia o pérdida de una ronda permite predecir la siguiente? No: cada resultado es incierto.';
+      } else {
+        $('nextRoundBtn').hidden = false;
+        $('nextRoundBtn').textContent = 'SIGUIENTE RONDA →';
+      }
+    }, 5150);
+  });
+  $('nextRoundBtn').addEventListener('click', () => {
+    if (round > 4 || chips <= 0) {
+      setupAds();
+      showScreen('ads', 38, 'Nivel 2 de 3 · Publicidad digital');
+    } else {
+      $('nextRoundBtn').hidden = true;
+      $('spinBtn').hidden = false; $('stopBtn').hidden = false;
+      updateRoulette();
+      $('rouletteResult').innerHTML = '<strong>Tu decisión</strong>Elegí cuánto arriesgar y girá la ruleta.';
+    }
+  });
+  $('stopBtn').addEventListener('click', () => {
+    if (spinning) return;
+    round = 5;
+    $('rouletteResult').innerHTML = '<strong>Elegiste retirarte</strong>Detenerse también es una decisión. Conservás las fichas que te quedan.';
+    $('spinBtn').hidden = true; $('stopBtn').hidden = true;
+    $('nextRoundBtn').hidden = false; $('nextRoundBtn').textContent = 'CONTINUAR →';
+    updateRoulette();
+  });
+
+  const adDeck = [
+    {text:'¡BONO DE BIENVENIDA para empezar!',answer:'Bonificación',opts:['Bonificación','Seguridad garantizada','Ahorro'],why:'Un bono puede tener condiciones. Leé las reglas: no siempre equivale a dinero disponible sin restricciones.'},
+    {text:'⏰ ¡Última oportunidad! ¡Decidí ahora!',answer:'Urgencia',opts:['Urgencia','Información neutral','Ahorro planificado'],why:'La urgencia intenta que decidas rápido, sin comparar ni pensar en las consecuencias.'},
+    {text:'👥 Todos tus amigos ya están jugando. ¡No te quedes afuera!',answer:'Presión social',opts:['Promesa matemática','Presión social','Necesidad básica'],why:'La presión social puede hacerte sentir que tenés que participar para pertenecer al grupo.'},
+    {text:'💰 Ganancia garantizada: ingresá tus datos para reclamar el premio.',answer:'Posible estafa',opts:['Posible estafa','Ahorro seguro','Oferta sin riesgos'],why:'Desconfiá de las ganancias garantizadas. No compartas contraseñas ni datos bancarios y verificá la fuente.'}
+  ];
+  function setupAds() {
+    ads = [...adDeck].sort(()=>Math.random()-.5);
+    adIndex=0; adScore=0; adLocked=false;
+    $('adScore').textContent=adScore;
+    renderAd();
+  }
+  function renderAd() {
+    const ad=ads[adIndex];
+    $('adRound').textContent=`${adIndex+1}/${ads.length}`;
+    $('adText').textContent=ad.text;
+    $('adFeedback').className='feedback'; $('adFeedback').textContent='';
+    $('adNextBtn').hidden=true;
+    $('adOptions').innerHTML='';
+    [...ad.opts].sort(()=>Math.random()-.5).forEach(opt=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=opt;
+      b.addEventListener('click',()=>{
+        if(adLocked)return;
+        adLocked=true;
+        const correct=opt===ad.answer;
+        if(correct) adScore++;
+        $('adScore').textContent=adScore;
+        [...$('adOptions').children].forEach(btn=>{btn.disabled=true;if(btn.textContent===ad.answer)btn.classList.add('selected')});
+        $('adFeedback').className='feedback show'+(correct?'':' bad');
+        $('adFeedback').innerHTML=`<strong>${correct?'¡Correcto!':'La estrategia era: '+ad.answer+'.'}</strong> ${ad.why}`;
+        $('adNextBtn').hidden=false;
+        $('adNextBtn').textContent=adIndex===ads.length-1?'CONTINUAR →':'SIGUIENTE ANUNCIO →';
+        tone(correct?620:220,.12);
+      });
+      $('adOptions').appendChild(b);
+    });
+  }
+  $('adNextBtn').addEventListener('click',()=>{
+    if(!adLocked)return;
+    adIndex++;
+    if(adIndex>=ads.length){
+      showScreen('decisions', 62, 'Nivel 3 de 3 · Decisiones y consecuencias');
+      resetDecision();
+    }else renderAd();
+  });
+
+  function resetDecision(){
+    decision=null; moneyLeft=8000; protectedMoney=0;
+    $('moneyLeft').textContent='$'+moneyLeft.toLocaleString('es-AR');
+    $('protected').textContent='$0'; $('decisionStep').textContent='1/2';
+    $('decisionQuestion').textContent='¿Qué harías ahora?';
+    $('decisionFeedback').className='feedback';
+    $('decisionOptions').innerHTML='';
+    const opts=[
+      ['stop','🛑','Detenerme y cuidar el dinero restante'],
+      ['retry','🔄','Volver a apostar para recuperar lo perdido'],
+      ['alternative','🌱','Buscar otra actividad y revisar mi presupuesto']
+    ];
+    opts.forEach(([id,emoji,label])=>{
+      const b=document.createElement('button');b.className='choice';b.dataset.decision=id;b.innerHTML=`<span>${emoji}</span>${label}`;
+      b.addEventListener('click',()=>chooseDecision(id,b));
+      $('decisionOptions').appendChild(b);
+    });
+    $('decisionNextBtn').hidden=true;
+    ['econCon','emoCon','socialCon','studyCon'].forEach((id,i)=>$(id).textContent=[
+      'El dinero puede destinarse a necesidades y objetivos.',
+      'La frustración puede impulsar decisiones rápidas.',
+      'Hablar con alguien de confianza puede ayudar.',
+      'El presupuesto también protege materiales y proyectos.'
+    ][i]);
+  }
+  function chooseDecision(id,btn){
+    if(decision!==null)return;
+    decision=id;
+    [...$('decisionOptions').children].forEach(b=>b.disabled=true);
+    btn.classList.add('selected');
+    let title, body;
+    if(id==='stop'){
+      protectedMoney=moneyLeft;
+      title='Elegiste detenerte.';
+      body='Conservás $8.000. La pérdida inicial no obliga a seguir jugando. Podés aceptar lo ocurrido y decidir qué hacer con el dinero restante.';
+      $('econCon').textContent='Protegés los $8.000 para necesidades, ahorro u objetivos.';
+      $('emoCon').textContent='Podés sentir frustración; respirar y hacer una pausa ayuda a pensar.';
+      $('socialCon').textContent='Podés conversar con alguien de confianza si te preocupa lo ocurrido.';
+      $('studyCon').textContent='Mantenés recursos para materiales y actividades de estudio.';
+    }else if(id==='retry'){
+      // illustrative hypothetical branch, not a prediction
+      const loseAgain=Math.random()<.65;
+      const change=loseAgain?-2000:2000;
+      moneyLeft+=change;
+      protectedMoney=0;
+      title=loseAgain?'Volviste a perder en esta simulación.':'Esta vez ganaste en la simulación.';
+      body=loseAgain?'Tu saldo queda en $6.000. Intentar recuperar lo perdido puede aumentar el riesgo y no garantiza recuperar el dinero.':'Tu saldo queda en $10.000, pero este resultado no garantiza que la próxima apuesta también sea ganadora.';
+      $('econCon').textContent=`Saldo hipotético: $${moneyLeft.toLocaleString('es-AR')}. No podés predecir el próximo resultado.`;
+      $('emoCon').textContent=loseAgain?'La frustración puede aumentar y empujar a seguir.':'La euforia también puede llevar a arriesgar más.';
+      $('socialCon').textContent='Ocultar pérdidas o ganancias puede complicar la comunicación.';
+      $('studyCon').textContent='Cada apuesta reduce la certeza sobre el dinero disponible para otros objetivos.';
+    }else{
+      protectedMoney=moneyLeft;
+      title='Elegiste una alternativa.';
+      body='Conservás $8.000 y podés planificar su uso: separar gastos necesarios, ahorro y una parte para entretenimiento sin arriesgarla.';
+      $('econCon').textContent='Podés elaborar un presupuesto y comparar necesidades con deseos.';
+      $('emoCon').textContent='Una pausa ayuda a responder a la frustración sin actuar impulsivamente.';
+      $('socialCon').textContent='Podés proponer una actividad con amigos que no implique apostar.';
+      $('studyCon').textContent='Reservás dinero para materiales y metas de estudio.';
+    }
+    $('moneyLeft').textContent='$'+moneyLeft.toLocaleString('es-AR');
+    $('protected').textContent='$'+protectedMoney.toLocaleString('es-AR');
+    $('decisionFeedback').className='feedback show';
+    $('decisionFeedback').innerHTML=`<strong>${title}</strong>${body}`;
+    $('decisionNextBtn').hidden=false;
+    tone(id==='retry'?240:620,.14);
+  }
+  $('decisionNextBtn').addEventListener('click',()=>{
+    setupQuiz();
+    showScreen('quiz', 80, 'Desafío final · ¿Qué aprendiste?');
+  });
+
+  const questions=[
+    {q:'Después de perder una apuesta, ¿qué decisión ayuda a reducir el riesgo?',opts:['Apostar más para recuperar de inmediato','Detenerse y evaluar la situación','Pedir dinero prestado para continuar'],correct:1,why:'No hay garantía de recuperar una pérdida. Detenerse permite proteger los recursos.'},
+    {q:'¿Qué intenta provocar el mensaje «¡Última oportunidad, decidí ahora!»?',opts:['Una planificación del presupuesto','Una explicación neutral','Urgencia para decidir rápido'],correct:2,why:'La urgencia puede reducir el tiempo que dedicamos a pensar y comparar.'},
+    {q:'¿Qué significa costo de oportunidad?',opts:['La mejor alternativa a la que renunciamos al elegir','El dinero que siempre se gana','Un bono que ofrece una plataforma'],correct:0,why:'Usar dinero en una opción implica renunciar a otros usos posibles, como ahorrar o comprar materiales.'}
+  ];
+  function setupQuiz(){quizIndex=0;quizScore=0;quizLocked=false;$('quizScore').textContent=quizScore;renderQuiz();}
+  function renderQuiz(){
+    quizLocked=false;const q=questions[quizIndex];
+    $('quizRound').textContent=`${quizIndex+1}/${questions.length}`;
+    $('quizQuestion').textContent=q.q;
+    $('quizFeedback').className='feedback';$('quizNextBtn').hidden=true;
+    $('quizOptions').innerHTML='';
+    q.opts.forEach((opt,i)=>{
+      const b=document.createElement('button');b.className='quiz-option';b.textContent=opt;
+      b.addEventListener('click',()=>{
+        if(quizLocked)return;quizLocked=true;
+        const correct=i===q.correct;if(correct)quizScore++;
+        $('quizScore').textContent=quizScore;
+        [...$('quizOptions').children].forEach((button,j)=>{button.disabled=true;if(j===q.correct)button.classList.add('correct');else if(j===i)button.classList.add('incorrect')});
+        $('quizFeedback').className='feedback show'+(correct?'':' bad');
+        $('quizFeedback').innerHTML=`<strong>${correct?'¡Bien!':'Repasemos:'}</strong> ${q.why}`;
+        $('quizNextBtn').hidden=false;
+        $('quizNextBtn').textContent=quizIndex===questions.length-1?'VER RESULTADO →':'SIGUIENTE PREGUNTA →';
+        tone(correct?620:220,.12);
+      });
+      $('quizOptions').appendChild(b);
+    });
+  }
+  $('quizNextBtn').addEventListener('click',()=>{
+    if(!quizLocked)return;
+    quizIndex++;
+    if(quizIndex>=questions.length){
+      $('finalScore').textContent=`${quizScore}/3`;
+      showScreen('final',100,'Experiencia completada');
+    }else renderQuiz();
+  });
+  $('restartBtn').addEventListener('click',()=>{
+    chips=10;round=1;wheelRotation=0;spinning=false;net=0;
+    $('wheel').style.transition='none';$('wheel').style.transform='rotate(0deg)';
+    void $('wheel').offsetWidth;$('wheel').style.transition='transform 5s cubic-bezier(.12,.72,.08,1)';
+    $('spinBtn').hidden=false;$('stopBtn').hidden=false;$('nextRoundBtn').hidden=true;
+    $('rouletteResult').innerHTML='<strong>Tu decisión</strong>Elegí una apuesta ficticia y girá la ruleta.';
+    updateRoulette();
+    showScreen('start',0,'Inicio');
+  });
+
+  // Keep the wheel and labels accessible and avoid interactions while an animation is in progress.
+  updateRoulette();
+})();
+</script>
+</body>
+</html>
